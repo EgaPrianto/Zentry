@@ -1,5 +1,13 @@
 source "https://rubygems.org"
 
+gem "i18n", "1.8.11"
+
+
+# Add these gems to fix compatibility issues
+gem "sorted_set", "~> 1.0"
+gem "concurrent-ruby"
+gem "tzinfo", "~> 2.0.6"
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.2"
 # Use postgresql as the database for Active Record
@@ -35,8 +43,10 @@ gem "thruster", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
-gem "cequel"
-gem "activemodel-serializers-xml" # Required for Rails 5+
+# Modified Cassandra gems with specific versions
+gem "cassandra-driver", "~> 3.2.5"
+gem "cequel", "~> 3.2.1"
+gem "activemodel-serializers-xml", "~> 1.0.2" # Required for Rails 5+
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
