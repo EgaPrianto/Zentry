@@ -15,10 +15,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_23_070649) do
   enable_extension "pg_catalog.plpgsql"
 
   create_table "follows", force: :cascade do |t|
-    t.integer "user_id"
-    t.integer "follower_id"
+    t.bigint "user_id", null: false
+    t.bigint "follower_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["follower_id"], name: "index_follows_on_follower_id"
+    t.index ["user_id", "follower_id"], name: "index_follows_on_user_id_and_follower_id", unique: true
+    t.index ["user_id"], name: "index_follows_on_user_id"
   end
 
   create_table "sleep_entries", force: :cascade do |t|
@@ -33,4 +36,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_23_070649) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
+
+  add_foreign_key "follows", "users"
+  add_foreign_key "follows", "users", column: "follower_id"
 end
