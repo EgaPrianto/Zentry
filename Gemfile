@@ -3,6 +3,8 @@ source "https://rubygems.org"
 gem "i18n", "1.8.11"
 
 
+gem 'dotenv-rails', groups: [:development, :test]
+
 # Add these gems to fix compatibility issues
 gem "sorted_set", "~> 1.0"
 gem "concurrent-ruby"
