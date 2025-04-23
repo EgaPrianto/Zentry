@@ -49,15 +49,15 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   cassandra:
-    image: cassandra:latest
+    image: cassandra:3.0.32
     container_name: zentry_cassandra
     ports:
       - "9042:9042"
     volumes:
       - cassandra_data:/var/lib/cassandra
     environment:
-      - MAX_HEAP_SIZE=512M
-      - HEAP_NEWSIZE=100M
+      - MAX_HEAP_SIZE=1024M
+      - HEAP_NEWSIZE=200M
     restart: unless-stopped
 
 volumes:
