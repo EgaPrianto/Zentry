@@ -1,6 +1,23 @@
 class FollowsController < ApplicationController
   before_action :authenticate_user
 
+  # GET /users/:user_id/followers
+  def index
+    limit = params[:limit] || 20
+    cursor = params[:cursor]
+
+    result = Followers::ListService.new(params[:user_id], limit: limit, cursor: cursor).call
+
+    if result[:success]
+      render json: {
+        followers: result[:followers],
+        pagination: result[:pagination]
+      }, status: :ok
+    else
+      render json: { error: result[:error] }, status: :not_found
+    end
+  end
+
   # POST /users/:user_id/follow
   def create
     @followed_user = User.find(params[:user_id])

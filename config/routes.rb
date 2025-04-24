@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resources :users, only: [] do
     post 'follow', to: 'follows#create'
     delete 'follow', to: 'follows#destroy'
+    get 'followers', to: 'follows#index'
   end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
