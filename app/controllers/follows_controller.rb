@@ -10,14 +10,14 @@ class FollowsController < ApplicationController
       return
     end
 
-    @follow = Follow.find_by(user_id: @current_user_id, follower_id: @followed_user.id)
+    @follow = Follow.find_by(user_id: @followed_user.id, follower_id: @current_user_id)
 
     if @follow
       render json: { error: I18n.t('errors.follows.already_following') }, status: :unprocessable_entity
       return
     end
 
-    @follow = Follow.new(user_id: @current_user_id, follower_id: @followed_user.id)
+    @follow = Follow.new(user_id: @followed_user.id, follower_id: @current_user_id)
 
     if @follow.save
       render json: @follow, status: :created
@@ -29,7 +29,7 @@ class FollowsController < ApplicationController
   # DELETE /users/:user_id/follow
   def destroy
     @followed_user = User.find(params[:user_id])
-    @follow = Follow.find_by(user_id: @current_user_id, follower_id: @followed_user.id)
+    @follow = Follow.find_by(user_id: @followed_user.id, follower_id: @current_user_id)
 
     if @follow
       @follow.destroy
