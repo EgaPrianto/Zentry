@@ -3,6 +3,7 @@ class SleepEntriesController < ApplicationController
   before_action :authenticate_user
 
   # GET /sleep_entries
+  # Not to be confused with feed controller, this controller is responsible for fetching the sleep entries of the current user.
   def index
     limit = [(params[:limit] || 10).to_i, 10000].min
     offset = [(params[:offset] || 0).to_i, 10000].min
@@ -32,6 +33,10 @@ class SleepEntriesController < ApplicationController
 
   # POST /sleep_entries
   def create
+    # TODO: Refactor into a service class to handle:
+    # 1. Sleep entry creation
+    # 2. Feed event duplication to Cassandra
+    # 3. Feed entry management in Cassandra
     @sleep_entry = SleepEntry.new(sleep_entry_params)
 
     if @sleep_entry.save
@@ -43,6 +48,10 @@ class SleepEntriesController < ApplicationController
 
   # PATCH/PUT /sleep_entries/1
   def update
+    # TODO: Refactor into a service class to handle:
+    # 1. Sleep entry update
+    # 2. Feed event duplication to Cassandra
+    # 3. Feed entry management in Cassandra
     if @sleep_entry.update(sleep_entry_params)
       render json: @sleep_entry
     else
