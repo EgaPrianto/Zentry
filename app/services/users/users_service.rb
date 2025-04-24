@@ -1,5 +1,5 @@
-module Followers
-  class ListService
+module Users
+  class UsersService
     attr_reader :user_id, :limit, :cursor
 
     def initialize(user_id, limit: 20, cursor: nil)
@@ -9,7 +9,8 @@ module Followers
       @cursor = cursor
     end
 
-    def call
+    # Get users who follow the specified user
+    def list_followers
       user = User.find_by(id: user_id)
       return { success: false, error: 'User not found' } unless user
 
@@ -22,6 +23,27 @@ module Followers
       {
         success: true,
         followers: followers_with_cursor,
+        pagination: {
+          limit: limit,
+          next_cursor: next_cursor
+        }
+      }
+    end
+
+    # Get users that the specified user follows
+    def list_following
+      user = User.find_by(id: user_id)
+      return { success: false, error: 'User not found' } unless user
+
+      # Use the model's scope for cursor-based pagination
+      following_with_cursor = user.follows.includes(:user).with_cursor_pagination(cursor, limit)
+
+      # Calculate next cursor using the model's method
+      next_cursor = Follow.calculate_next_cursor(following_with_cursor, limit)
+
+      {
+        success: true,
+        following: following_with_cursor,
         pagination: {
           limit: limit,
           next_cursor: next_cursor
