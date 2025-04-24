@@ -1,5 +1,15 @@
 source "https://rubygems.org"
 
+gem "i18n", "1.8.11"
+
+
+gem 'dotenv-rails', groups: [:development, :test]
+
+# Add these gems to fix compatibility issues
+gem "sorted_set", "~> 1.0"
+gem "concurrent-ruby"
+gem "tzinfo", "~> 2.0.6"
+
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.2"
 # Use postgresql as the database for Active Record
@@ -13,7 +23,7 @@ gem "puma", ">= 5.0"
 # gem "bcrypt", "~> 3.1.7"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
-gem "tzinfo-data", platforms: %i[ windows jruby ]
+# gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 # Use the database-backed adapters for Rails.cache, Active Job, and Action Cable
 gem "solid_cache"
@@ -35,9 +45,14 @@ gem "thruster", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
+# Modified Cassandra gems with specific versions
+gem "cassandra-driver", "~> 3.2.5"
+gem "cequel", "~> 3.2.1"
+gem "activemodel-serializers-xml", "~> 1.0.2" # Required for Rails 5+
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
-  gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
+  # gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 
   # Static analysis for security vulnerabilities [https://brakemanscanner.org/]
   gem "brakeman", require: false
