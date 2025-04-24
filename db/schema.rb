@@ -26,7 +26,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_23_070649) do
 
   create_table "sleep_entries", force: :cascade do |t|
     t.integer "user_id"
-    t.decimal "sleep_duration", precision: 5, scale: 2
+    t.integer "sleep_duration"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
