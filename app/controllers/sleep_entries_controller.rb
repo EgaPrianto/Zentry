@@ -67,7 +67,7 @@ class SleepEntriesController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_sleep_entry
-      @sleep_entry = SleepEntry.find(params.expect(:id))
+      @sleep_entry = SleepEntry.find(params.fetch(:id))
     end
 
     # Only allow a list of trusted parameters through.
