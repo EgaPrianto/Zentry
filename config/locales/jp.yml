@@ -3,3 +3,8 @@ jp:
   errors:
     sleep_entries:
       unauthorized: "最初にログインしてください"
+    follows:
+      unauthorized: "最初にログインしてください"
+      cannot_follow_self: "自分自身をフォローすることはできません"
+      already_following: "すでにこのユーザーをフォローしています"
+      not_following: "このユーザーをフォローしていません"

@@ -3,3 +3,8 @@ id:
   errors:
     sleep_entries:
       unauthorized: "Silakan masuk terlebih dahulu"
+    follows:
+      unauthorized: "Silakan masuk terlebih dahulu"
+      cannot_follow_self: "Anda tidak dapat mengikuti diri sendiri"
+      already_following: "Anda sudah mengikuti pengguna ini"
+      not_following: "Anda tidak mengikuti pengguna ini"
