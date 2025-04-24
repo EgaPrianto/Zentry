@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "i18n", "1.8.11"
 
+gem 'faker', groups: [:development, :test]
 
 gem 'dotenv-rails', groups: [:development, :test]
 

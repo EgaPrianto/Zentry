@@ -1,0 +1,5 @@
+jp:
+  hello: "こんにちは世界"
+  errors:
+    sleep_entries:
+      unauthorized: "最初にログインしてください"

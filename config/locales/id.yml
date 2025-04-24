@@ -1,0 +1,5 @@
+id:
+  hello: "Halo dunia"
+  errors:
+    sleep_entries:
+      unauthorized: "Silakan masuk terlebih dahulu"
