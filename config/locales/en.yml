@@ -32,3 +32,8 @@ en:
   errors:
     sleep_entries:
       unauthorized: "Please login first"
+    follows:
+      unauthorized: "Please login first"
+      cannot_follow_self: "You cannot follow yourself"
+      already_following: "You are already following this user"
+      not_following: "You are not following this user"

@@ -63,7 +63,7 @@ created_users.each do |user|
 
     follows_data << {
       user_id: user.id,
-      follower_id: followee.id  # This matches your schema where follower_id represents the followed_user
+      follower_id: followee.id  # This matches your schema where follower_id represents the follower_user
     }
   end
 end
