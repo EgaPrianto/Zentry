@@ -13,16 +13,15 @@ module Users
     def list_followers
       user = User.find_by(id: user_id)
       return { success: false, error: 'User not found' } unless user
-
       # Use the model's scope for cursor-based pagination
-      followers_with_cursor = user.followers.includes(:followed_user).with_cursor_pagination(cursor, limit)
+      followers_with_cursor = user.followers.includes(:follower_user).with_cursor_pagination(cursor, limit)
 
       # Calculate next cursor using the model's method
       next_cursor = Follow.calculate_next_cursor(followers_with_cursor, limit)
 
       {
         success: true,
-        followers: followers_with_cursor,
+        followers: followers_with_cursor.map(&:follower_user),
         pagination: {
           limit: limit,
           next_cursor: next_cursor
@@ -43,7 +42,7 @@ module Users
 
       {
         success: true,
-        following: following_with_cursor,
+        following: following_with_cursor.map(&:user),
         pagination: {
           limit: limit,
           next_cursor: next_cursor

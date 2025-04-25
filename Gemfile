@@ -66,4 +66,8 @@ group :development, :test do
   gem 'factory_bot_rails'
   gem 'shoulda-matchers'
   gem 'database_cleaner-active_record'
+  gem 'pry-rails'
+  gem 'pry-byebug'
 end
+
+gem "factory_bot", "~> 6.5"
