@@ -1,7 +1,7 @@
 # spec/services/users/users_service_spec.rb
 require 'rails_helper'
 
-RSpec.describe Users::UsersService do
+RSpec.describe UsersService do
   let(:user) { create(:user) }
 
   subject(:service) { described_class.new(user.id, **options) }
