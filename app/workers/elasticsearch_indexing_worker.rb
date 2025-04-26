@@ -3,12 +3,12 @@ class ElasticsearchIndexingWorker
     Rails.logger.info("Starting ElasticsearchIndexingWorker")
 
     # Subscribe to sleep entries topic
-    Kafka::Consumer.subscribe('sleep_entries', 'elasticsearch_indexer_group') do |message|
+    Kafka::Consumer.consume('sleep_entries', consumer_group: 'elasticsearch_indexer_group') do |message|
       process_sleep_entry_message(message)
     end
 
     # Subscribe to follows topic
-    Kafka::Consumer.subscribe('follows', 'elasticsearch_indexer_group') do |message|
+    Kafka::Consumer.consume('follows', consumer_group: 'elasticsearch_indexer_group') do |message|
       process_follow_message(message)
     end
   end
@@ -73,7 +73,6 @@ class ElasticsearchIndexingWorker
 
         feed_documents = followers.map do |follow|
           {
-            id: "#{sleep_entry_id}_#{follow.follower_id}",
             user_id: follow.follower_id,
             author_id: user_id,
             sleep_entry_id: sleep_entry_id,
