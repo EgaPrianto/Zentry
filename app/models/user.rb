@@ -3,7 +3,7 @@ class User < ApplicationRecord
 
   # Users that this user follows
   has_many :follows, foreign_key: :follower_id, dependent: :destroy
-  has_many :follower_users, through: :follows, source: :user
+  has_many :following_users, through: :follows, source: :user
 
   # Users following this user (followers)
   has_many :followers, class_name: 'Follow', foreign_key: :user_id, dependent: :destroy

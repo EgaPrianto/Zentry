@@ -46,10 +46,13 @@ gem "thruster", require: false
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
-# Modified Cassandra gems with specific versions
-gem "cassandra-driver", "~> 3.2.5"
-gem "cequel", "~> 3.2.1"
-gem "activemodel-serializers-xml", "~> 1.0.2" # Required for Rails 5+
+# Elasticsearch gems with compatible versions
+gem "elasticsearch", "~> 7.13.3"  # Use 7.x version to match elasticsearch-model
+gem "elasticsearch-model", "~> 7.2.0"
+gem "elasticsearch-rails", "~> 7.2.0"
+
+# Kafka integration
+gem "ruby-kafka", "~> 1.5.0"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
