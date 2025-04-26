@@ -1,0 +1,17 @@
+development:
+  host: "localhost"
+  port: 9200
+  log: true
+
+test:
+  host: "localhost"
+  port: 9200
+  log: false
+
+production:
+  hosts:
+    - "<%= ENV["ELASTICSEARCH_HOST"] || "elasticsearch" %>"
+  port: <%= ENV["ELASTICSEARCH_PORT"] || 9200 %>
+  user: "<%= ENV["ELASTICSEARCH_USER"] %>"
+  password: "<%= ENV["ELASTICSEARCH_PASSWORD"] %>"
+  log: false

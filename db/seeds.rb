@@ -32,14 +32,16 @@ sleep_entries_data = []
 created_users.each do |user|
   # Random number of entries between 3 and 5
   rand(3..5).times do
-    # Random sleep duration between 4 and 10 hours, converted to milliseconds
-    duration = rand(4*60..10*60).minutes.to_i
+    # Random sleep duration between 4 and 10 hours
+    duration = rand(4*60..10*60).minutes
     # Random date within the last 2 weeks
     created_at = rand(1..14).days.ago
+    started_at = created_at - duration
 
     sleep_entries_data << {
       user_id: user.id,
-      sleep_duration: duration,
+      sleep_duration: duration.to_i,
+      start_at: started_at,
       created_at: created_at,
       updated_at: created_at
     }

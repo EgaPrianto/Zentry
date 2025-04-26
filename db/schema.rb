@@ -27,6 +27,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_04_24_172059) do
   create_table "sleep_entries", force: :cascade do |t|
     t.integer "user_id"
     t.integer "sleep_duration"
+    t.datetime "start_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
