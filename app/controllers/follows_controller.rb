@@ -6,7 +6,7 @@ class FollowsController < ApplicationController
     limit = params[:limit] || 20
     cursor = params[:cursor]
 
-    result = Users::UsersService.new(params[:user_id], limit: limit, cursor: cursor).list_followers
+    result = UsersService.new(params[:user_id], limit: limit, cursor: cursor).list_followers
 
     if result[:success]
       render json: {
@@ -23,7 +23,7 @@ class FollowsController < ApplicationController
     limit = params[:limit] || 20
     cursor = params[:cursor]
 
-    result = Users::UsersService.new(params[:user_id], limit: limit, cursor: cursor).list_following
+    result = UsersService.new(params[:user_id], limit: limit, cursor: cursor).list_following
 
     if result[:success]
       render json: {
@@ -54,6 +54,15 @@ class FollowsController < ApplicationController
     @follow = Follow.new(user_id: @follower_user.id, follower_id: @current_user_id)
 
     if @follow.save
+      # Publish follow event to Kafka
+      Kafka::Producer.publish('follows', {
+        id: @follow.id,
+        user_id: @follow.user_id,        # The user being followed
+        follower_id: @follow.follower_id, # The user who is following
+        created_at: @follow.created_at,
+        event_type: 'follow_created'
+      })
+
       render json: @follow, status: :created
     else
       render json: @follow.errors, status: :unprocessable_entity
@@ -66,7 +75,18 @@ class FollowsController < ApplicationController
     @follow = Follow.find_by(user_id: @follower_user.id, follower_id: @current_user_id)
 
     if @follow
+      follow_data = {
+        id: @follow.id,
+        user_id: @follow.user_id,        # The user being unfollowed
+        follower_id: @follow.follower_id, # The user who is unfollowing
+        event_type: 'follow_deleted'
+      }
+
       @follow.destroy
+
+      # Publish unfollow event to Kafka after destroying the record
+      Kafka::Producer.publish('follows', follow_data)
+
       head :no_content
     else
       render json: { error: I18n.t('errors.follows.not_following') }, status: :not_found

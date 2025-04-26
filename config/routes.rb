@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
-  resources :sleep_entries
+  resources :sleep_entries do
+    collection do
+      get 'feed'
+    end
+  end
 
   # Follow/Unfollow routes
   resources :users, only: [] do
