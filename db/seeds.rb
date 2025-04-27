@@ -139,7 +139,7 @@ puts "Created #{Follow.count} follows"
 # Verify celebrity status
 created_celebrities.each do |celebrity|
   follower_count = Follow.where(user_id: celebrity.id).count
-  puts "Celebrity #{celebrity.name} has #{follower_count} followers"
+  puts "Celebrity #{celebrity.name} ID #{celebrity.id} has #{follower_count} followers"
   puts "Is treated as celebrity by the system: #{Elasticsearch::FeedStrategy.use_fan_in?(celebrity.id) ? 'YES' : 'NO'}"
 end
 
