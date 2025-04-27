@@ -6,6 +6,14 @@ class Follow < ApplicationRecord
   validates :follower_id, presence: true
   validates :user_id, uniqueness: { scope: :follower_id }
 
+  # Set a class variable to track whether we're inside a transaction
+  # that should handle Kafka publishing
+  thread_mattr_accessor :skip_kafka_callbacks
+
+  # Normal callbacks that can be skipped when in a managed transaction
+  after_create :publish_follow_created_event, unless: -> { Follow.skip_kafka_callbacks }
+  after_destroy :publish_follow_deleted_event, unless: -> { Follow.skip_kafka_callbacks }
+
   scope :with_cursor_pagination, lambda { |cursor = nil, limit = 20|
     query = order(created_at: :desc, id: :desc)
 
@@ -31,6 +39,38 @@ class Follow < ApplicationRecord
 
     last_record = results.last
     encode_cursor(created_at: last_record.created_at, id: last_record.id)
+  end
+
+  # Methods to explicitly publish events (useful for transaction handling)
+  def publish_follow_created_event
+    payload = {
+      id: id,
+      user_id: user_id,        # The user being followed
+      follower_id: follower_id, # The user who is following
+      created_at: created_at,
+      event_type: 'follow_created'
+    }
+
+    result = Kafka::Producer.publish('follows', payload)
+    unless result
+      Rails.logger.error("Failed to publish follow #{id} creation event to Kafka")
+    end
+    result
+  end
+
+  def publish_follow_deleted_event
+    payload = {
+      id: id,
+      user_id: user_id,        # The user being unfollowed
+      follower_id: follower_id, # The user who is unfollowing
+      event_type: 'follow_deleted'
+    }
+
+    result = Kafka::Producer.publish('follows', payload)
+    unless result
+      Rails.logger.error("Failed to publish follow #{id} deletion event to Kafka")
+    end
+    result
   end
 
   private

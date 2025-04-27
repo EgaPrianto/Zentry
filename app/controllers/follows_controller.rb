@@ -51,21 +51,13 @@ class FollowsController < ApplicationController
       return
     end
 
-    @follow = Follow.new(user_id: @follower_user.id, follower_id: @current_user_id)
+    # Use the service instead of handling transactions directly
+    result = UsersService.create_follow(@current_user_id, @follower_user.id)
 
-    if @follow.save
-      # Publish follow event to Kafka
-      Kafka::Producer.publish('follows', {
-        id: @follow.id,
-        user_id: @follow.user_id,        # The user being followed
-        follower_id: @follow.follower_id, # The user who is following
-        created_at: @follow.created_at,
-        event_type: 'follow_created'
-      })
-
-      render json: @follow, status: :created
+    if result[:success]
+      render json: result[:follow], status: :created
     else
-      render json: @follow.errors, status: :unprocessable_entity
+      render json: { error: result[:error] }, status: :unprocessable_entity
     end
   end
 
@@ -75,19 +67,14 @@ class FollowsController < ApplicationController
     @follow = Follow.find_by(user_id: @follower_user.id, follower_id: @current_user_id)
 
     if @follow
-      follow_data = {
-        id: @follow.id,
-        user_id: @follow.user_id,        # The user being unfollowed
-        follower_id: @follow.follower_id, # The user who is unfollowing
-        event_type: 'follow_deleted'
-      }
+      # Use the service instead of handling transactions directly
+      result = UsersService.destroy_follow(@follow)
 
-      @follow.destroy
-
-      # Publish unfollow event to Kafka after destroying the record
-      Kafka::Producer.publish('follows', follow_data)
-
-      head :no_content
+      if result[:success]
+        head :no_content
+      else
+        render json: { error: result[:error] }, status: :unprocessable_entity
+      end
     else
       render json: { error: I18n.t('errors.follows.not_following') }, status: :not_found
     end
