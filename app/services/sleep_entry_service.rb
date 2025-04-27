@@ -5,23 +5,20 @@ class SleepEntryService
     # Start a database transaction
     ActiveRecord::Base.transaction do
       begin
+        # Temporarily disable automatic Kafka callbacks since we'll handle it explicitly
+        SleepEntry.skip_kafka_callbacks = true
+
         # Create the sleep entry
         sleep_entry = SleepEntry.new(params.merge(user_id: user_id))
         if sleep_entry.save
-          # Publish to Kafka for further processing
-          # Include event_type for Elasticsearch consumer to process
-          kafka_payload = sleep_entry.as_json.merge(
-            follower_count: User.find(user_id).followers.count,
-            event_type: 'sleep_entry_created'
-          )
-
-          unless Kafka::Producer.publish('sleep_entries', kafka_payload)
+          # Explicitly publish to Kafka within the transaction
+          if sleep_entry.publish_created_event
+            result = { success: true, sleep_entry: sleep_entry }
+          else
             Rails.logger.error("Failed to publish sleep entry #{sleep_entry.id} to Kafka")
             # Rollback the transaction if Kafka publishing fails
             raise ActiveRecord::Rollback
           end
-
-          result = { success: true, sleep_entry: sleep_entry }
         else
           Rails.logger.error("Failed to save sleep entry: #{sleep_entry.errors.full_messages.join(', ')}")
           result = { success: false, errors: sleep_entry.errors }
@@ -32,6 +29,9 @@ class SleepEntryService
         Rails.logger.error(e.backtrace.join("\n"))
         result = { success: false, errors: { base: [e.message] } }
         raise ActiveRecord::Rollback
+      ensure
+        # Re-enable automatic Kafka callbacks
+        SleepEntry.skip_kafka_callbacks = false
       end
     end
 

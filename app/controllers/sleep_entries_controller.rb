@@ -91,7 +91,7 @@ class SleepEntriesController < ApplicationController
   # PATCH/PUT /sleep_entries/1
   def update
     if @sleep_entry.update(sleep_entry_params)
-      # Publish update event to Kafka
+      # Kafka publishing now happens in SleepEntry model's after_update callback
       render json: @sleep_entry
     else
       render json: @sleep_entry.errors, status: :unprocessable_entity
@@ -100,14 +100,8 @@ class SleepEntriesController < ApplicationController
 
   # DELETE /sleep_entries/1
   def destroy
-    # Capture ID before destruction
-    sleep_entry_id = @sleep_entry.id
-    user_id = @sleep_entry.user_id
-
     @sleep_entry.destroy!
-
-    # Publish delete event to Kafka
-
+    # Kafka publishing now happens in SleepEntry model's after_destroy callback
     head :no_content
   end
 
