@@ -8,3 +8,11 @@ id:
       cannot_follow_self: "Anda tidak dapat mengikuti diri sendiri"
       already_following: "Anda sudah mengikuti pengguna ini"
       not_following: "Anda tidak mengikuti pengguna ini"
+  success:
+    sleep_entries:
+      created: "Catatan tidur berhasil dibuat"
+      updated: "Catatan tidur berhasil diperbarui"
+      deleted: "Catatan tidur berhasil dihapus"
+    follows:
+      created: "Anda sekarang mengikuti %{name}"
+      deleted: "Anda tidak lagi mengikuti %{name}"

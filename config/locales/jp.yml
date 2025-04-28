@@ -8,3 +8,11 @@ jp:
       cannot_follow_self: "自分自身をフォローすることはできません"
       already_following: "すでにこのユーザーをフォローしています"
       not_following: "このユーザーをフォローしていません"
+  success:
+    sleep_entries:
+      created: "睡眠記録が正常に作成されました"
+      updated: "睡眠記録が正常に更新されました"
+      deleted: "睡眠記録が正常に削除されました"
+    follows:
+      created: "あなたは %{name} をフォローするようになりました"
+      deleted: "あなたは %{name} をフォローしなくなりました"

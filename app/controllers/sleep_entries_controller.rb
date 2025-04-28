@@ -84,9 +84,12 @@ class SleepEntriesController < ApplicationController
     result = SleepEntryService.create_sleep_entry(@current_user_id, sleep_entry_params)
 
     if result[:success]
-      render json: result[:sleep_entry], status: :created, location: result[:sleep_entry]
+      render json: {
+        sleep_entry: result[:sleep_entry],
+        message: I18n.t('success.sleep_entries.created')
+      }, status: :created, location: result[:sleep_entry]
     else
-      render json: result[:errors], status: :unprocessable_entity
+      render json: { error: result[:errors] }, status: :unprocessable_entity
     end
   end
 
@@ -94,9 +97,12 @@ class SleepEntriesController < ApplicationController
   def update
     if @sleep_entry.update(sleep_entry_params)
       # Kafka publishing now happens in SleepEntry model's after_update callback
-      render json: @sleep_entry
+      render json: {
+        sleep_entry: @sleep_entry,
+        message: I18n.t('success.sleep_entries.updated')
+      }, status: :ok
     else
-      render json: @sleep_entry.errors, status: :unprocessable_entity
+      render json: { error: @sleep_entry.errors }, status: :unprocessable_entity
     end
   end
 
@@ -104,7 +110,7 @@ class SleepEntriesController < ApplicationController
   def destroy
     @sleep_entry.destroy!
     # Kafka publishing now happens in SleepEntry model's after_destroy callback
-    head :no_content
+    render json: { message: I18n.t('success.sleep_entries.deleted') }, status: :ok
   end
 
   private
