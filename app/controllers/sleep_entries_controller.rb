@@ -28,7 +28,7 @@ class SleepEntriesController < ApplicationController
 
   # GET /sleep_entries/feed
   # Get all following users' sleep records from the previous week
-  # sorted by sleep duration
+  # sorted by sleep duration with special handling for celebrity users
   def feed
     limit = [(params[:limit] || 10).to_i, 10000].min
     offset = [(params[:offset] || 0).to_i, 10000].min
@@ -39,8 +39,9 @@ class SleepEntriesController < ApplicationController
       last_week: true # Filter to only show last week's entries
     }
 
-    # This will use Elasticsearch to efficiently query and sort data
-    results = SleepEntry.feed_for_user(@current_user_id, options)
+    # Directly use Elasticsearch service which handles both fan-out (regular users)
+    # and fan-in (celebrity users) approaches
+    results = ::Elasticsearch::SleepEntryService.feed_for_user(@current_user_id, options)
 
     entries = []
     total_count = results['hits']['total']['value'] rescue 0
@@ -50,7 +51,8 @@ class SleepEntriesController < ApplicationController
         source = hit['_source']
         {
           id: source['sleep_entry_id'],
-          user_id: source['author_id'],
+          user_id: source['user_id'],
+          author_id: source['author_id'],
           sleep_duration: source['sleep_duration'],
           created_at: source['created_at'],
           updated_at: source['updated_at']
