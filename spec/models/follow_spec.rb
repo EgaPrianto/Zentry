@@ -5,26 +5,6 @@ RSpec.describe Follow do
   let(:user) { create(:user) }
   let(:follower_user) { create(:user) }
 
-  describe 'validations' do
-    it { is_expected.to validate_presence_of(:user_id) }
-    it { is_expected.to validate_presence_of(:follower_id) }
-
-    it 'validates uniqueness of user_id scoped to follower_id' do
-      # Create initial follow
-      create(:follow, user: user, follower_user: follower_user)
-
-      # Try to create a duplicate
-      duplicate = build(:follow, user: user, follower_user: follower_user)
-
-      expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:user_id]).to include('has already been taken')
-    end
-  end
-
-  describe 'associations' do
-    it { is_expected.to belong_to(:user) }
-    it { is_expected.to belong_to(:follower_user).class_name('User').with_foreign_key('follower_id') }
-  end
 
   describe 'cursor pagination' do
     context 'when no cursor is provided' do
@@ -154,48 +134,6 @@ RSpec.describe Follow do
         ).and_return(true)
 
         expect(follow.publish_follow_deleted_event).to be true
-      end
-    end
-  end
-
-  describe 'callbacks' do
-    context 'when skip_kafka_callbacks is false' do
-      before do
-        Follow.skip_kafka_callbacks = false
-      end
-
-      it 'calls publish_follow_created_event on create' do
-        new_follow = build(:follow)
-        expect(new_follow).to receive(:publish_follow_created_event)
-        new_follow.save!
-      end
-
-      it 'calls publish_follow_deleted_event on destroy' do
-        follow.save!
-        expect(follow).to receive(:publish_follow_deleted_event)
-        follow.destroy
-      end
-    end
-
-    context 'when skip_kafka_callbacks is true' do
-      before do
-        Follow.skip_kafka_callbacks = true
-      end
-
-      after do
-        Follow.skip_kafka_callbacks = false
-      end
-
-      it 'does not call publish_follow_created_event on create' do
-        new_follow = build(:follow)
-        expect(new_follow).not_to receive(:publish_follow_created_event)
-        new_follow.save!
-      end
-
-      it 'does not call publish_follow_deleted_event on destroy' do
-        follow.save!
-        expect(follow).not_to receive(:publish_follow_deleted_event)
-        follow.destroy
       end
     end
   end

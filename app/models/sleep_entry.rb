@@ -30,10 +30,9 @@ class SleepEntry < ApplicationRecord
 
   # Methods to explicitly publish events (useful for transaction handling)
   def publish_created_event
-    kafka_payload = self.as_json.merge(
-      follower_count: self.user&.followers&.count || 0,
-      event_type: 'sleep_entry_created'
-    )
+    kafka_payload = self.as_json
+    kafka_payload["follower_count"] = self.user&.followers&.count || 0
+    kafka_payload["event_type"] = 'sleep_entry_created'
 
     result = Kafka::Producer.publish('sleep_entries', kafka_payload)
     unless result
@@ -43,10 +42,9 @@ class SleepEntry < ApplicationRecord
   end
 
   def publish_updated_event
-    kafka_payload = self.as_json.merge(
-      follower_count: self.user&.followers&.count || 0,
-      event_type: 'sleep_entry_updated'
-    )
+    kafka_payload = self.as_json
+    kafka_payload["follower_count"] = self.user&.followers&.count || 0
+    kafka_payload["event_type"] = 'sleep_entry_updated'
 
     result = Kafka::Producer.publish('sleep_entries', kafka_payload)
     unless result
@@ -57,9 +55,9 @@ class SleepEntry < ApplicationRecord
 
   def publish_deleted_event
     kafka_payload = {
-      id: id,
-      user_id: user_id,
-      event_type: 'sleep_entry_deleted'
+      "id" => id,
+      "user_id" => user_id,
+      "event_type" => 'sleep_entry_deleted'
     }
 
     result = Kafka::Producer.publish('sleep_entries', kafka_payload)
