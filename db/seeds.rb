@@ -8,6 +8,7 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 require 'faker'
+require 'date'
 
 # Reset Elasticsearch indices
 puts "Resetting Elasticsearch indices..."
@@ -50,14 +51,33 @@ puts "Created #{created_celebrities.size} celebrity users"
 puts "Creating sleep entries..."
 sleep_entries_count = 0
 
+# Calculate last week's date range (Monday to Sunday of last week)
+today = Date.today
+beginning_of_this_week = today - today.wday + 1 # Monday of this week
+end_of_last_week = beginning_of_this_week - 1   # Sunday of last week
+beginning_of_last_week = end_of_last_week - 6   # Monday of last week
+
+puts "Creating sleep entries for last week: #{beginning_of_last_week.strftime('%Y-%m-%d')} to #{end_of_last_week.strftime('%Y-%m-%d')}"
+
 # For each user (including celebrities), create 3-5 sleep entries
 (created_users + created_celebrities).each do |user|
   # Random number of entries between 3 and 5
   rand(3..5).times do
     # Random sleep duration between 4 and 10 hours
     duration = rand(4*60..10*60).minutes
-    # Random date within the last 2 weeks
-    created_at = rand(1..14).days.ago
+
+    # Random date within last week (Monday to Sunday)
+    # Generate a random number of days between 0 and 6 to add to beginning_of_last_week
+    days_to_add = rand(0..6)
+    entry_date = beginning_of_last_week + days_to_add
+
+    # Random time on that day
+    hour = rand(19..23)  # Between 7PM and 11PM
+    minute = rand(0..59)
+    second = rand(0..59)
+
+    # Combine date and time to create the start_at time
+    created_at = DateTime.new(entry_date.year, entry_date.month, entry_date.day, hour, minute, second)
     started_at = created_at - duration
 
     sleep_entry_params = {

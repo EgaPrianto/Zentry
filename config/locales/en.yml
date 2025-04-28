@@ -37,3 +37,11 @@ en:
       cannot_follow_self: "You cannot follow yourself"
       already_following: "You are already following this user"
       not_following: "You are not following this user"
+  success:
+    sleep_entries:
+      created: "Sleep entry created successfully"
+      updated: "Sleep entry updated successfully"
+      deleted: "Sleep entry deleted successfully"
+    follows:
+      created: "You are now following %{name}"
+      deleted: "You are no longer following %{name}"

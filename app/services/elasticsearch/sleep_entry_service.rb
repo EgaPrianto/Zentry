@@ -158,8 +158,7 @@ module Elasticsearch
 
         # Add date range if specified
         if date_range.present?
-          query[:query][:bool][:must] << {
-            range: { created_at: date_range }
+          query[:query][:bool][:must] << {            range: { sleep_start_at: date_range }
           }
         end
 
@@ -187,7 +186,8 @@ module Elasticsearch
         # Add date range if specified
         if date_range.present?
           query[:query][:bool][:must] << {
-            range: { created_at: date_range }
+
+          range: { sleep_start_at: date_range }
           }
         end
 

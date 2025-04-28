@@ -43,6 +43,7 @@ class ElasticsearchFollowWorker
             author_id: user_id,
             sleep_entry_id: sleep_entry.id,
             sleep_duration: sleep_entry.sleep_duration.to_i,
+            sleep_start_at: sleep_entry.start_at.iso8601,
             created_at: sleep_entry.created_at.iso8601,
             updated_at: sleep_entry.updated_at.iso8601
           }

@@ -55,7 +55,10 @@ class FollowsController < ApplicationController
     result = UsersService.create_follow(@current_user_id, @follower_user.id)
 
     if result[:success]
-      render json: result[:follow], status: :created
+      render json: {
+        follow: result[:follow],
+        message: I18n.t('success.follows.created', name: @follower_user.name)
+      }, status: :created
     else
       render json: { error: result[:error] }, status: :unprocessable_entity
     end
@@ -69,9 +72,11 @@ class FollowsController < ApplicationController
     if @follow
       # Use the service instead of handling transactions directly
       result = UsersService.destroy_follow(@follow)
-
+      
       if result[:success]
-        head :no_content
+        render json: { 
+          message: I18n.t('success.follows.deleted', name: @follower_user.name)
+        }, status: :ok
       else
         render json: { error: result[:error] }, status: :unprocessable_entity
       end
