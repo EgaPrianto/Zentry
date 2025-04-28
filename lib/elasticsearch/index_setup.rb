@@ -15,6 +15,7 @@ module Elasticsearch
             user_id: { type: 'long' },
             sleep_entry_id: { type: 'long' },
             sleep_duration: { type: 'long' },
+            sleep_start_at: { type: 'date' },
             created_at: { type: 'date' },
             updated_at: { type: 'date' }
           }
@@ -27,10 +28,11 @@ module Elasticsearch
         Elasticsearch::Connection.create_index('feeds', {
           properties: {
             id: { type: 'long' },
-            user_id: { type: 'long' },  # The user's feed
-            author_id: { type: 'long' }, # The user who created the sleep entry
+            user_id: { type: 'long' },
+            author_id: { type: 'long' },
             sleep_entry_id: { type: 'long' },
-            sleep_duration: { type: 'long' }, # Allows for sorting
+            sleep_duration: { type: 'long' },
+            sleep_start_at: { type: 'date' },
             created_at: { type: 'date' },
             updated_at: { type: 'date' }
           }

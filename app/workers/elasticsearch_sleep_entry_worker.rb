@@ -29,9 +29,11 @@ class ElasticsearchSleepEntryWorker
 
   def self.index_sleep_entry(message)
     begin
+
       sleep_entry_id = message['id']
       user_id = message['user_id']
       sleep_duration = message['sleep_duration'].to_i
+      sleep_start_at = message['start_at']
       created_at = message['created_at']
       updated_at = message['updated_at']
 
@@ -41,6 +43,7 @@ class ElasticsearchSleepEntryWorker
         user_id: user_id,
         sleep_entry_id: sleep_entry_id,
         sleep_duration: sleep_duration,
+        sleep_start_at: sleep_start_at,
         created_at: created_at,
         updated_at: updated_at
       }
@@ -59,6 +62,7 @@ class ElasticsearchSleepEntryWorker
             author_id: user_id,
             sleep_entry_id: sleep_entry_id,
             sleep_duration: sleep_duration,
+            sleep_start_at: message['start_at'],
             created_at: created_at,
             updated_at: updated_at
           }
@@ -78,14 +82,17 @@ class ElasticsearchSleepEntryWorker
 
   def self.update_sleep_entry(message)
     begin
+
       sleep_entry_id = message['id']
       user_id = message['user_id']
       sleep_duration = message['sleep_duration'].to_i
+      sleep_start_at = message['start_at']
       updated_at = message['updated_at']
 
       # Update the sleep entry document
       document = {
         sleep_duration: sleep_duration,
+        sleep_start_at: sleep_start_at,
         updated_at: updated_at
       }
 

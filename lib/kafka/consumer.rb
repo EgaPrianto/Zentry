@@ -36,7 +36,6 @@ module Kafka
           end
         end
       rescue => e
-        binding.pry
         puts ("[KafkaConsumer] Error in consumer for topic #{topic}: #{e.message}")
         puts (e.backtrace.join("\n"))
         # Sleep before attempting to reconnect
