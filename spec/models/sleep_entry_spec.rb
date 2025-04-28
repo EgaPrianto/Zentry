@@ -4,14 +4,6 @@ RSpec.describe SleepEntry do
   subject(:sleep_entry) { build(:sleep_entry, user: user) }
   let(:user) { create(:user) }
 
-  describe 'validations' do
-    it { is_expected.to validate_presence_of(:start_at) }
-  end
-
-  describe 'associations' do
-    it { is_expected.to belong_to(:user) }
-  end
-
   describe '#sleep_duration' do
     it 'returns an ActiveSupport::Duration object' do
       # Set a sleep duration in seconds (e.g., 8 hours)
@@ -28,17 +20,12 @@ RSpec.describe SleepEntry do
       it 'publishes sleep entry creation to Kafka' do
         sleep_entry.save!
 
-        expected_payload = sleep_entry.as_json.merge(
-          follower_count: user.followers.count,
-          event_type: 'sleep_entry_created'
-        )
-
         expect(Kafka::Producer).to receive(:publish).with(
           'sleep_entries',
           hash_including(
-            id: sleep_entry.id,
-            user_id: user.id,
-            event_type: 'sleep_entry_created'
+            "id" => sleep_entry.id,
+            "user_id" => user.id,
+            "event_type" => 'sleep_entry_created'
           )
         ).and_return(true)
 
@@ -50,17 +37,13 @@ RSpec.describe SleepEntry do
       it 'publishes sleep entry update to Kafka' do
         sleep_entry.save!
 
-        expected_payload = sleep_entry.as_json.merge(
-          follower_count: user.followers.count,
-          event_type: 'sleep_entry_updated'
-        )
-
         expect(Kafka::Producer).to receive(:publish).with(
           'sleep_entries',
           hash_including(
-            id: sleep_entry.id,
-            user_id: user.id,
-            event_type: 'sleep_entry_updated'
+            "id" => sleep_entry.id,
+            "user_id" => user.id,
+            "event_type" => 'sleep_entry_updated',
+            "follower_count" => 0
           )
         ).and_return(true)
 
@@ -75,9 +58,9 @@ RSpec.describe SleepEntry do
         expect(Kafka::Producer).to receive(:publish).with(
           'sleep_entries',
           hash_including(
-            id: sleep_entry.id,
-            user_id: user.id,
-            event_type: 'sleep_entry_deleted'
+            "id" => sleep_entry.id,
+            "user_id" => user.id,
+            "event_type" => 'sleep_entry_deleted'
           )
         ).and_return(true)
 

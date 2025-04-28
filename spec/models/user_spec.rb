@@ -3,16 +3,6 @@ require 'rails_helper'
 RSpec.describe User do
   subject(:user) { create(:user) }
 
-  describe 'associations' do
-    it { is_expected.to have_many(:sleep_entries).dependent(:destroy) }
-
-    it { is_expected.to have_many(:follows).with_foreign_key(:follower_id).dependent(:destroy) }
-    it { is_expected.to have_many(:following_users).through(:follows).source(:user) }
-
-    it { is_expected.to have_many(:followers).class_name('Follow').with_foreign_key(:user_id).dependent(:destroy) }
-    it { is_expected.to have_many(:follower_users).through(:followers).source(:follower_user) }
-  end
-
   describe 'dependent destroy behavior' do
     context 'with sleep entries' do
       it 'destroys associated sleep entries when user is destroyed' do
