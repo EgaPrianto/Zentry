@@ -31,6 +31,15 @@ RSpec.describe SleepEntry do
 
         expect(sleep_entry.publish_created_event).to be true
       end
+
+      it 'logs error when publishing fails' do
+        sleep_entry.save!
+
+        expect(Kafka::Producer).to receive(:publish).and_return(false)
+        expect(Rails.logger).to receive(:error).with("Failed to publish sleep entry #{sleep_entry.id} creation event to Kafka")
+
+        expect(sleep_entry.publish_created_event).to be false
+      end
     end
 
     describe '#publish_updated_event' do
@@ -49,6 +58,15 @@ RSpec.describe SleepEntry do
 
         expect(sleep_entry.publish_updated_event).to be true
       end
+
+      it 'logs error when publishing fails' do
+        sleep_entry.save!
+
+        expect(Kafka::Producer).to receive(:publish).and_return(false)
+        expect(Rails.logger).to receive(:error).with("Failed to publish sleep entry #{sleep_entry.id} update event to Kafka")
+
+        expect(sleep_entry.publish_updated_event).to be false
+      end
     end
 
     describe '#publish_deleted_event' do
@@ -65,6 +83,15 @@ RSpec.describe SleepEntry do
         ).and_return(true)
 
         expect(sleep_entry.publish_deleted_event).to be true
+      end
+
+      it 'logs error when publishing fails' do
+        sleep_entry.save!
+
+        expect(Kafka::Producer).to receive(:publish).and_return(false)
+        expect(Rails.logger).to receive(:error).with("Failed to publish sleep entry #{sleep_entry.id} deletion event to Kafka")
+
+        expect(sleep_entry.publish_deleted_event).to be false
       end
     end
   end

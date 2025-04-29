@@ -72,6 +72,7 @@ group :development, :test do
   gem 'database_cleaner-active_record'
   gem 'pry-rails'
   gem 'pry-byebug'
+  gem 'simplecov', require: false # Add SimpleCov for test coverage reporting
 end
 
 gem "factory_bot", "~> 6.5"

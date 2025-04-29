@@ -117,6 +117,15 @@ RSpec.describe Follow do
 
         expect(follow.publish_follow_created_event).to be true
       end
+
+      it 'logs error when publishing fails' do
+        follow.save!
+
+        expect(Kafka::Producer).to receive(:publish).and_return(false)
+        expect(Rails.logger).to receive(:error).with("Failed to publish follow #{follow.id} creation event to Kafka")
+
+        expect(follow.publish_follow_created_event).to be false
+      end
     end
 
     describe '#publish_follow_deleted_event' do
@@ -134,6 +143,57 @@ RSpec.describe Follow do
         ).and_return(true)
 
         expect(follow.publish_follow_deleted_event).to be true
+      end
+
+      it 'logs error when publishing fails' do
+        follow.save!
+
+        expect(Kafka::Producer).to receive(:publish).and_return(false)
+        expect(Rails.logger).to receive(:error).with("Failed to publish follow #{follow.id} deletion event to Kafka")
+
+        expect(follow.publish_follow_deleted_event).to be false
+      end
+    end
+  end
+
+  describe 'callbacks' do
+    context 'when skip_kafka_callbacks is false' do
+      before do
+        Follow.skip_kafka_callbacks = false
+      end
+
+      it 'calls publish_follow_created_event on create' do
+        new_follow = build(:follow, user: create(:user), follower_user: create(:user))
+        expect(new_follow).to receive(:publish_follow_created_event)
+        new_follow.save!
+      end
+
+      it 'calls publish_follow_deleted_event on destroy' do
+        follow.save!
+        expect(follow).to receive(:publish_follow_deleted_event)
+        follow.destroy
+      end
+    end
+
+    context 'when skip_kafka_callbacks is true' do
+      before do
+        Follow.skip_kafka_callbacks = true
+      end
+
+      after do
+        Follow.skip_kafka_callbacks = false
+      end
+
+      it 'does not call publish_follow_created_event on create' do
+        new_follow = build(:follow, user: create(:user), follower_user: create(:user))
+        expect(new_follow).not_to receive(:publish_follow_created_event)
+        new_follow.save!
+      end
+
+      it 'does not call publish_follow_deleted_event on destroy' do
+        follow.save!
+        expect(follow).not_to receive(:publish_follow_deleted_event)
+        follow.destroy
       end
     end
   end
