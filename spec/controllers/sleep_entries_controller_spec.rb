@@ -90,7 +90,7 @@ RSpec.describe SleepEntriesController, type: :controller do
           last_week: true
         }
 
-        allow(::Elasticsearch::SleepEntryService).to receive(:feed_for_user)
+        allow(SleepEntryService).to receive(:get_followers_feed)
           .with(user_id, hash_including(expected_options))
           .and_return(mock_results)
 
@@ -103,7 +103,7 @@ RSpec.describe SleepEntriesController, type: :controller do
       end
 
       it 'calls the ElasticSearch service' do
-        expect(::Elasticsearch::SleepEntryService).to have_received(:feed_for_user)
+        expect(SleepEntryService).to have_received(:get_followers_feed)
           .with(user_id, hash_including(size: limit))
       end
 
@@ -114,7 +114,7 @@ RSpec.describe SleepEntriesController, type: :controller do
           'id' => '1',
           'user_id' => '456',
           'author_id' => '789',
-          'sleep_duration' => 480
+          'sleep_duration' =>  "8 minutes"
         )
       end
 

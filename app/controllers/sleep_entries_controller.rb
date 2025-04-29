@@ -41,7 +41,7 @@ class SleepEntriesController < ApplicationController
 
     # Directly use Elasticsearch service which handles both fan-out (regular users)
     # and fan-in (celebrity users) approaches
-    results = ::Elasticsearch::SleepEntryService.feed_for_user(@current_user_id, options)
+    results = SleepEntryService.get_followers_feed(@current_user_id, options)
 
     entries = []
     total_count = results['hits']['total']['value'] rescue 0
@@ -53,7 +53,8 @@ class SleepEntriesController < ApplicationController
           id: source['sleep_entry_id'],
           user_id: source['user_id'],
           author_id: source['author_id'],
-          sleep_duration: source['sleep_duration'],
+          sleep_duration: human_readable_duration(source['sleep_duration']),
+          start_at: source['sleep_start_at'],
           created_at: source['created_at'],
           updated_at: source['updated_at']
         }
@@ -114,6 +115,23 @@ class SleepEntriesController < ApplicationController
   end
 
   private
+
+    def human_readable_duration(input)
+      duration = ActiveSupport::Duration.build(input)
+
+      # Print all parts of duration
+      parts = duration.parts
+      days = parts[:days].to_i
+      hours = parts[:hours].to_i
+      minutes = parts[:minutes].to_i
+
+      human_readable = []
+      human_readable << "#{days} days" if days > 0
+      human_readable << "#{hours} hours" if hours > 0
+      human_readable << "#{minutes} minutes" if minutes > 0
+      human_readable.join(', ')
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_sleep_entry
       @sleep_entry = SleepEntry.find(params.fetch(:id))
