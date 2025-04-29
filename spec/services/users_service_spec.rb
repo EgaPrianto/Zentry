@@ -283,7 +283,7 @@ RSpec.describe UsersService do
         expect(Rails.logger).to receive(:error).with("Error creating follow: Test error")
 
         expect(ActiveRecord::Base).to receive(:transaction).and_yield
-        expect { described_class.create_follow(follower.id, user.id) }.to raise_error
+        expect { described_class.create_follow(follower.id, user.id) }.to raise_error(StandardError)
       end
     end
   end
@@ -410,7 +410,7 @@ RSpec.describe UsersService do
       it 'logs and returns the error' do
         expect(Rails.logger).to receive(:error).with("Error destroying follow: Test error")
 
-        expect{ described_class.destroy_follow(follow) }.to raise_error
+        expect{ described_class.destroy_follow(follow) }.to raise_error(StandardError)
 
       end
     end

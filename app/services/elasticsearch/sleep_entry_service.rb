@@ -186,12 +186,23 @@ module Elasticsearch
         # Add date range if specified
         if date_range.present?
           query[:query][:bool][:must] << {
-
           range: { sleep_start_at: date_range }
           }
         end
 
-        ::Elasticsearch::Connection.search('sleep_entries', query)
+        result = ::Elasticsearch::Connection.search('sleep_entries', query)
+
+        # Transform the user_id to author_id in the response
+        if result['hits'] && result['hits']['hits'].present?
+          result['hits']['hits'].each do |hit|
+            if hit['_source'] && hit['_source']['user_id']
+              hit['_source']['author_id'] = hit['_source']['user_id'].to_i
+              hit['_source']['user_id'] = user_id.to_i # set current user's ID
+            end
+          end
+        end
+
+        result
       end
 
       # Combined approach for users who follow both regular and celebrity users
@@ -211,14 +222,7 @@ module Elasticsearch
         end
         # Extract hits from fan-in results
         if fan_in_results['hits'] && fan_in_results['hits']['hits'].present?
-          fan_in_results['hits']['hits'].each do |hit|
-            # Rename user_id to author_id in the source document
-            if hit['_source'] && hit['_source']['user_id']
-              hit['_source']['author_id'] = hit['_source']['user_id'].to_i
-              hit['_source']['user_id'] = user_id.to_i # set current user's ID
-            end
-            combined_hits << hit
-          end
+          combined_hits.concat(fan_in_results['hits']['hits'])
         end
 
         # Sort by sleep_duration (desc), then by created_at (desc)
