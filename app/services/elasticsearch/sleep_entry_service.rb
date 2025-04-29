@@ -209,10 +209,16 @@ module Elasticsearch
         if fan_out_results['hits'] && fan_out_results['hits']['hits'].present?
           combined_hits.concat(fan_out_results['hits']['hits'])
         end
-
         # Extract hits from fan-in results
         if fan_in_results['hits'] && fan_in_results['hits']['hits'].present?
-          combined_hits.concat(fan_in_results['hits']['hits'])
+          fan_in_results['hits']['hits'].each do |hit|
+            # Rename user_id to author_id in the source document
+            if hit['_source'] && hit['_source']['user_id']
+              hit['_source']['author_id'] = hit['_source']['user_id'].to_i
+              hit['_source']['user_id'] = user_id.to_i # set current user's ID
+            end
+            combined_hits << hit
+          end
         end
 
         # Sort by sleep_duration (desc), then by created_at (desc)
