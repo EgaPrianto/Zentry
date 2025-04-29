@@ -144,6 +144,180 @@ RSpec.describe Elasticsearch::SleepEntryService do
     let(:from) { 0 }
     let(:options) { { size: size, from: from } }
 
+    describe 'date range handling' do
+      let(:celebrity_ids) { [101, 102] }
+      let(:mock_response) { { 'hits' => { 'hits' => [] } } }
+
+      before do
+        allow(Elasticsearch::FeedStrategy).to receive(:get_celebrity_following_ids)
+          .with(user_id)
+          .and_return(celebrity_ids)
+
+        allow(Elasticsearch::FeedStrategy).to receive(:get_regular_following_ids)
+          .with(user_id)
+          .and_return([12,32])
+
+        allow(Elasticsearch::Connection).to receive(:search)
+          .and_return(mock_response)
+      end
+
+      it 'handles last_week option correctly' do
+        now = Time.current
+        start_of_last_week = now.beginning_of_week - 1.week
+        end_of_last_week = start_of_last_week.end_of_week
+
+        last_week_options = options.merge(last_week: true)
+
+        expected_query = {
+          query: {
+            bool: {
+              must: [
+                { terms: { user_id: celebrity_ids } },
+                { range: {
+                    sleep_start_at: {
+                      gte: start_of_last_week.iso8601,
+                      lte: end_of_last_week.iso8601
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          sort: [
+            { sleep_duration: { order: 'desc' } },
+            { created_at: { order: 'desc' } }
+          ],
+          size: size,
+          from: from
+        }
+
+        expect(Elasticsearch::Connection).to receive(:search)
+          .with('sleep_entries', hash_including(
+            query: hash_including(
+              bool: hash_including(
+                must: array_including(
+                  hash_including(range: hash_including(
+                    sleep_start_at: hash_including(
+                      gte: start_of_last_week.iso8601,
+                      lte: end_of_last_week.iso8601
+                    )
+                  ))
+                )
+              )
+            )
+          ))
+
+        described_class.feed_for_user(user_id, last_week_options)
+      end
+
+      it 'handles previous_week option correctly (alias for last_week)' do
+        now = Time.current
+        start_of_last_week = now.beginning_of_week - 1.week
+        end_of_last_week = start_of_last_week.end_of_week
+
+        previous_week_options = options.merge(previous_week: true)
+
+        expect(Elasticsearch::Connection).to receive(:search)
+          .with('sleep_entries', hash_including(
+            query: hash_including(
+              bool: hash_including(
+                must: array_including(
+                  hash_including(range: hash_including(
+                    sleep_start_at: hash_including(
+                      gte: start_of_last_week.iso8601,
+                      lte: end_of_last_week.iso8601
+                    )
+                  ))
+                )
+              )
+            )
+          ))
+
+        described_class.feed_for_user(user_id, previous_week_options)
+      end
+
+      it 'handles custom date range with from_date and to_date' do
+        from_date = Time.current - 3.days
+        to_date = Time.current - 1.day
+
+        date_range_options = options.merge(from_date: from_date, to_date: to_date)
+
+        expect(Elasticsearch::Connection).to receive(:search)
+          .with('sleep_entries', hash_including(
+            query: hash_including(
+              bool: hash_including(
+                must: array_including(
+                  hash_including(range: hash_including(
+                    sleep_start_at: hash_including(
+                      gte: from_date.iso8601,
+                      lte: to_date.iso8601
+                    )
+                  ))
+                )
+              )
+            )
+          ))
+
+        described_class.feed_for_user(user_id, date_range_options)
+      end
+
+      it 'handles from_date without to_date' do
+        from_date = Time.current - 3.days
+
+        date_range_options = options.merge(from_date: from_date)
+
+        expect(Elasticsearch::Connection).to receive(:search)
+          .with('sleep_entries', hash_including(
+            query: hash_including(
+              bool: hash_including(
+                must: array_including(
+                  hash_including(range: hash_including(
+                    sleep_start_at: hash_including(
+                      gte: from_date.iso8601
+                    )
+                  ))
+                )
+              )
+            )
+          ))
+
+        described_class.feed_for_user(user_id, date_range_options)
+      end
+
+      it 'prioritizes last_week over custom date range when both are provided' do
+        now = Time.current
+        start_of_last_week = now.beginning_of_week - 1.week
+        end_of_last_week = start_of_last_week.end_of_week
+        from_date = Time.current - 10.days
+        to_date = Time.current
+
+        # Both date options provided, but last_week should take precedence
+        mixed_options = options.merge(
+          last_week: true,
+          from_date: from_date,
+          to_date: to_date
+        )
+
+        expect(Elasticsearch::Connection).to receive(:search)
+          .with('sleep_entries', hash_including(
+            query: hash_including(
+              bool: hash_including(
+                must: array_including(
+                  hash_including(range: hash_including(
+                    sleep_start_at: hash_including(
+                      gte: start_of_last_week.iso8601,
+                      lte: end_of_last_week.iso8601
+                    )
+                  ))
+                )
+              )
+            )
+          ))
+
+        described_class.feed_for_user(user_id, mixed_options)
+      end
+    end
+
     context 'when user only follows regular users' do
       before do
         allow(Elasticsearch::FeedStrategy).to receive(:get_celebrity_following_ids)
