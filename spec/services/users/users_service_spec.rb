@@ -167,4 +167,252 @@ RSpec.describe UsersService do
       end
     end
   end
+
+  describe '.create_follow' do
+    let(:user) { create(:user) }
+    let(:follower) { create(:user) }
+    let(:follow) { instance_double(Follow, id: 1, user_id: user.id, follower_id: follower.id, created_at: Time.current) }
+
+    before do
+      allow(Follow).to receive(:new).and_return(follow)
+      allow(follow).to receive(:save).and_return(true)
+      allow(Rails.logger).to receive(:error)
+
+      # Mock the transaction behavior
+      allow(ActiveRecord::Base).to receive(:transaction).and_yield
+    end
+
+    context 'when successful' do
+      it 'creates a follow relationship and publishes to Kafka' do
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(true).ordered
+
+        allow(follow).to receive(:publish_follow_created_event) do
+          payload = {
+            id: follow.id,
+            user_id: follow.user_id,
+            follower_id: follow.follower_id,
+            created_at: follow.created_at,
+            event_type: 'follow_created'
+          }
+          # Mock Kafka::Producer to return false (publish failure)
+          allow(Kafka::Producer).to receive(:publish).with('follows', payload).and_return(true)
+          true
+        end
+
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(false).ordered
+
+        result = described_class.create_follow(follower.id, user.id)
+
+        expect(result[:success]).to be true
+        expect(result[:follow]).to eq follow
+      end
+
+      it 'disables and re-enables kafka callbacks' do
+        # We'll verify that both values are set properly during execution
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(true)
+        expect(follow).to receive(:publish_follow_created_event).and_return(true)
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(false)
+
+        described_class.create_follow(follower.id, user.id)
+      end
+    end
+
+    context 'when save fails' do
+      before do
+        allow(follow).to receive(:save).and_return(false)
+        allow(follow).to receive(:errors).and_return(double(full_messages: ['Error message']))
+        # Don't actually raise Rollback in tests
+        allow_any_instance_of(Object).to receive(:raise).with(ActiveRecord::Rollback)
+      end
+
+      it 'returns failure result with errors' do
+        result = described_class.create_follow(follower.id, user.id)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq 'Error message'
+      end
+    end
+
+    context 'when Kafka publishing fails' do
+      before do
+        # Mock the publish_follow_created_event method to use the actual Kafka::Producer
+        allow(follow).to receive(:publish_follow_created_event) do
+          payload = {
+            id: follow.id,
+            user_id: follow.user_id,
+            follower_id: follow.follower_id,
+            created_at: follow.created_at,
+            event_type: 'follow_created'
+          }
+          # Mock Kafka::Producer to return false (publish failure)
+          allow(Kafka::Producer).to receive(:publish).with('follows', payload).and_return(false)
+          false
+        end
+
+        # Don't actually raise Rollback in tests
+        allow_any_instance_of(Object).to receive(:raise).with(ActiveRecord::Rollback)
+      end
+
+      it 'returns failure result with Kafka error' do
+        result = described_class.create_follow(follower.id, user.id)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq 'Failed to publish to Kafka'
+      end
+    end
+
+    context 'when an exception occurs' do
+      before do
+        allow(follow).to receive(:save).and_return(true)
+        # Don't actually raise Rollback in tests
+        allow(follow).to receive(:publish_follow_created_event) do
+          payload = {
+            id: follow.id,
+            user_id: follow.user_id,
+            follower_id: follow.follower_id,
+            created_at: follow.created_at,
+            event_type: 'follow_created'
+          }
+          # Expect payload to be correct but raise an error
+          allow(Kafka::Producer).to receive(:publish).with('follows', payload).and_raise(StandardError.new('Test error'))
+          raise StandardError.new('Test error')
+        end
+      end
+
+      it 'logs and returns the error' do
+        expect(Rails.logger).to receive(:error).with("Error creating follow: Test error")
+
+        expect(ActiveRecord::Base).to receive(:transaction).and_yield
+        expect { described_class.create_follow(follower.id, user.id) }.to raise_error
+      end
+    end
+  end
+
+  describe '.destroy_follow' do
+    let(:user) { create(:user) }
+    let(:follower) { create(:user) }
+    let(:follow) { instance_double(Follow, id: 1, user_id: user.id, follower_id: follower.id) }
+    let(:temp_follow) { instance_double(Follow, id: 1, user_id: user.id, follower_id: follower.id) }
+
+    before do
+      allow(follow).to receive(:destroy).and_return(true)
+      allow(Follow).to receive(:new).and_return(temp_follow)
+      allow(Rails.logger).to receive(:error)
+
+      # Mock the transaction behavior
+      allow(ActiveRecord::Base).to receive(:transaction).and_yield
+    end
+
+    context 'when successful' do
+
+      before do
+        allow(temp_follow).to receive(:publish_follow_deleted_event) do
+          payload = {
+            id: temp_follow.id,
+            user_id: temp_follow.user_id,
+            follower_id: temp_follow.follower_id,
+            event_type: 'follow_deleted'
+          }
+          # Mock Kafka::Producer to return false (publish failure)
+          allow(Kafka::Producer).to receive(:publish).with('follows', payload).and_return(true)
+          true
+        end
+      end
+
+      it 'destroys the follow relationship and publishes to Kafka' do
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(true).ordered
+        expect(follow).to receive(:destroy).ordered
+
+        # Expect the Follow.new call with the right attributes
+        expect(Follow).to receive(:new).with(
+          id: follow.id,
+          user_id: user.id,
+          follower_id: follower.id
+        ).ordered.and_return(temp_follow)
+
+        # Set up expectation for the Kafka publishing
+
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(false).ordered
+
+        result = described_class.destroy_follow(follow)
+
+        expect(result[:success]).to be true
+      end
+
+      it 'disables and re-enables kafka callbacks' do
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(true)
+        expect(temp_follow).to receive(:publish_follow_deleted_event).and_return(true)
+        expect(Follow).to receive(:skip_kafka_callbacks=).with(false)
+
+        described_class.destroy_follow(follow)
+      end
+    end
+
+    context 'when destroy fails' do
+      before do
+        allow(follow).to receive(:destroy).and_return(false)
+        allow(follow).to receive(:errors).and_return(double(full_messages: ['Error message']))
+        # Don't actually raise Rollback in tests
+        allow_any_instance_of(Object).to receive(:raise).with(ActiveRecord::Rollback)
+      end
+
+      it 'returns failure result with errors' do
+        result = described_class.destroy_follow(follow)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq 'Error message'
+      end
+    end
+
+    context 'when Kafka publishing fails' do
+      before do
+        # Mock the publish_follow_deleted_event method to use the actual Kafka::Producer
+        allow(temp_follow).to receive(:publish_follow_deleted_event) do
+          payload = {
+            id: temp_follow.id,
+            user_id: temp_follow.user_id,
+            follower_id: temp_follow.follower_id,
+            event_type: 'follow_deleted'
+          }
+          # Mock Kafka::Producer to return false (publish failure)
+          allow(Kafka::Producer).to receive(:publish).with('follows', payload).and_return(false)
+          false
+        end
+
+        # Don't actually raise Rollback in tests
+        allow_any_instance_of(Object).to receive(:raise).with(ActiveRecord::Rollback)
+      end
+
+      it 'returns failure result with Kafka error' do
+        result = described_class.destroy_follow(follow)
+
+        expect(result[:success]).to be false
+        expect(result[:error]).to eq 'Failed to publish to Kafka'
+      end
+    end
+
+    context 'when an exception occurs' do
+      before do
+        allow(follow).to receive(:destroy).and_raise(StandardError.new('Test error'))
+        # Don't actually raise Rollback in tests
+        allow(follow).to receive(:publish_follow_deleted_event) do
+          payload = {
+            id: follow.id,
+            user_id: follow.user_id,
+            follower_id: follow.follower_id,            event_type: 'follow_deleted'
+          }
+          # Expect payload to be correct but raise an error
+          allow(Kafka::Producer).to receive(:publish).with('follows', payload).and_raise(StandardError.new('Test error'))
+          raise StandardError.new('Test error')
+        end
+      end
+
+      it 'logs and returns the error' do
+        expect(Rails.logger).to receive(:error).with("Error destroying follow: Test error")
+
+        expect{ described_class.destroy_follow(follow) }.to raise_error
+
+      end
+    end
+  end
 end
