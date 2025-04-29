@@ -32,3 +32,6 @@
 /config/master.key
 
 /.vscode
+
+# Ignore Coverage
+/coverage/
