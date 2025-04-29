@@ -72,9 +72,9 @@ class FollowsController < ApplicationController
     if @follow
       # Use the service instead of handling transactions directly
       result = UsersService.destroy_follow(@follow)
-      
+
       if result[:success]
-        render json: { 
+        render json: {
           message: I18n.t('success.follows.deleted', name: @follower_user.name)
         }, status: :ok
       else
