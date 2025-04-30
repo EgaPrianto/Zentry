@@ -6,6 +6,10 @@ gem 'faker', groups: [:development, :test]
 
 gem 'dotenv-rails', groups: [:development, :test]
 
+gem 'capybara', groups: [:development, :test]
+
+gem 'selenium-webdriver', groups: [:development, :test]
+
 # Add these gems to fix compatibility issues
 gem "sorted_set", "~> 1.0"
 gem "concurrent-ruby"

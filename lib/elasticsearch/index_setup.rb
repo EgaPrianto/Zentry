@@ -27,7 +27,6 @@ module Elasticsearch
         # showing sleep records of a user's following connections
         Elasticsearch::Connection.create_index('feeds', {
           properties: {
-            id: { type: 'long' },
             user_id: { type: 'long' },
             author_id: { type: 'long' },
             sleep_entry_id: { type: 'long' },

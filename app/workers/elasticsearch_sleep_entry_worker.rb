@@ -58,6 +58,7 @@ class ElasticsearchSleepEntryWorker
 
         feed_documents = followers.map do |follow|
           {
+            id: "#{sleep_entry_id}_#{follow.follower_id}",
             user_id: follow.follower_id,
             author_id: user_id,
             sleep_entry_id: sleep_entry_id,

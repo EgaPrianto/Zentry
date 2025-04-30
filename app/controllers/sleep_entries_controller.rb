@@ -53,6 +53,7 @@ class SleepEntriesController < ApplicationController
           id: source['sleep_entry_id'],
           user_id: source['user_id'],
           author_id: source['author_id'],
+          sleep_entry_id: source['sleep_entry_id'],
           sleep_duration: human_readable_duration(source['sleep_duration']),
           start_at: source['sleep_start_at'],
           created_at: source['created_at'],

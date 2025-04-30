@@ -63,6 +63,8 @@ RSpec.describe SleepEntriesController, type: :controller do
                 'sleep_entry_id' => '1',
                 'user_id' => '456',
                 'author_id' => '789',
+                'sleep_start_at' => '2025-04-25T10:00:00Z',
+                'sleep_entry_id' => '1',
                 'sleep_duration' => 480,
                 'created_at' => '2025-04-25T10:00:00Z',
                 'updated_at' => '2025-04-25T10:00:00Z'
@@ -72,6 +74,8 @@ RSpec.describe SleepEntriesController, type: :controller do
                 'sleep_entry_id' => '2',
                 'user_id' => '456',
                 'author_id' => '789',
+                'sleep_start_at' => '2025-04-24T10:00:00Z',
+                'sleep_entry_id' => '2',
                 'sleep_duration' => 400,
                 'created_at' => '2025-04-24T10:00:00Z',
                 'updated_at' => '2025-04-24T10:00:00Z'

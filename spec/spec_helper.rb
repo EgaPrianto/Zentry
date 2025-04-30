@@ -11,6 +11,10 @@ SimpleCov.start 'rails' do
   add_filter '/config/'
   add_filter '/vendor/'
 
+  # Exclude empty files
+  add_filter 'app/jobs/application_job.rb'
+  add_filter 'app/mailers/application_mailer.rb'
+
   # You can add custom groups to organize coverage report
   add_group 'Controllers', 'app/controllers'
   add_group 'Models', 'app/models'
