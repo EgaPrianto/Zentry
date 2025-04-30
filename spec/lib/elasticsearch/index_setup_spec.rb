@@ -37,7 +37,6 @@ RSpec.describe Elasticsearch::IndexSetup do
     let(:expected_mappings) do
       {
         properties: {
-          id: { type: 'long' },
           user_id: { type: 'long' },
           author_id: { type: 'long' },
           sleep_entry_id: { type: 'long' },
