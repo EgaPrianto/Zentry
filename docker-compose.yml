@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:latest
+    image: postgres:15.3
     container_name: zentry_postgres
     environment:
       POSTGRES_USER: zentry
@@ -14,18 +14,18 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  redis:
-    image: redis:latest
-    container_name: zentry_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    command: redis-server --appendonly yes
+  # redis: # for future use when implementing caching
+  #   image: redis:7.2
+  #   container_name: zentry_redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   command: redis-server --appendonly yes
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.5.1
     container_name: zentry_zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -34,7 +34,7 @@ services:
       - "2181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.1
     container_name: zentry_kafka
     depends_on:
       - zookeeper
