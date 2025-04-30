@@ -113,6 +113,28 @@ Run the test suite with:
 bin/rails spec
 ```
 
+### Integration Testing
+
+For integration tests to run properly, follow these steps:
+
+1. Make sure the application is running on localhost:3000:
+   ```bash
+   bin/rails server
+   ```
+
+2. Ensure the database is seeded with test data:
+   ```bash
+   bin/rails db:seed
+   ```
+
+The seed data is necessary for integration testing as it creates a consistent baseline of users, sleep entries, and follow relationships that the tests rely on. The seeds include:
+- A set of regular users with diverse sleep patterns
+- Celebrity users with large follower counts
+- Follow relationships between users
+- Various sleep entries with different durations and timestamps
+
+This data allows the integration tests to verify that the hybrid fan-out/fan-in architecture works correctly across different user scenarios.
+
 ### Elasticsearch Commands
 
 ```bash
