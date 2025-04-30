@@ -109,6 +109,7 @@ RSpec.describe ElasticsearchSleepEntryWorker do
       it 'also indexes in followers feeds using bulk_index' do
         expected_feed_documents = [
           {
+            id: "#{sleep_entry_id}_#{follower_1.follower_id}",
             user_id: follower_1.follower_id,
             author_id: user_id,
             sleep_entry_id: sleep_entry_id,
@@ -118,6 +119,7 @@ RSpec.describe ElasticsearchSleepEntryWorker do
             updated_at: updated_at
           },
           {
+            id: "#{sleep_entry_id}_#{follower_2.follower_id}",
             user_id: follower_2.follower_id,
             author_id: user_id,
             sleep_entry_id: sleep_entry_id,
