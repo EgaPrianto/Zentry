@@ -24,13 +24,28 @@ RSpec.describe "FollowFeedSystemTest", type: :system do
     today = DateTime.now
     beginning_of_this_week = today - today.wday + 1
     end_of_last_week = beginning_of_this_week - 1   # Sunday of last week
-    beginning_of_last_week = end_of_last_week - 6   # Monday of last week
-    create_sleep_entry(@current_user_id, 7.hours, beginning_of_last_week + 1.days)
-    create_sleep_entry(@celebrity_user_id, 8.hours, beginning_of_last_week + 1.days)
+    @beginning_of_last_week = end_of_last_week - 6   # Monday of last week
+    create_sleep_entry(@current_user_id, 7.hours, @beginning_of_last_week + 1.days)
+    create_sleep_entry(@celebrity_user_id, 8.hours, @beginning_of_last_week + 1.days)
 
     unfollow_user(@current_user_id, @celebrity_user_id)
     unfollow_user(@current_user_id, @regular_user_id)
 
+  end
+
+  def delete_sleep_entry(user_id, entry_id)
+    uri = URI("http://localhost:3000/sleep_entries/#{entry_id}")
+    request = Net::HTTP::Delete.new(uri)
+    request['X-User-ID'] = user_id.to_s
+
+    response = Net::HTTP.start(uri.hostname, uri.port) do |http|
+      http.request(request)
+    end
+
+    {
+      status: response.code.to_i,
+      body: JSON.parse(response.body)
+    }
   end
 
   def create_sleep_entry(user_id, duration = 8.hours, start_time = Time.current)
@@ -43,7 +58,7 @@ RSpec.describe "FollowFeedSystemTest", type: :system do
     request.body = {
       sleep_entry: {
         start_at: start_time.strftime('%Y-%m-%d %H:%M:%S'),
-        duration: duration.minutes.to_i,
+        sleep_duration: duration.to_i,
       }
     }.to_json
 
@@ -193,6 +208,96 @@ RSpec.describe "FollowFeedSystemTest", type: :system do
         # Clean up - unfollow both users
         unfollow_user(@current_user_id, @regular_user_id)
         unfollow_user(@current_user_id, @celebrity_user_id)
+      end
+    end
+
+    context "when regular user posts a new sleep entry" do
+      it "should appear in the current user's feed" do
+        # Follow the regular user
+        follow_user(@current_user_id, @regular_user_id)
+
+        # Wait for Elasticsearch to process
+        sleep(2)
+
+        # Create a new sleep entry for the followed user
+        new_entry = create_sleep_entry(@regular_user_id, 14.hours, @beginning_of_last_week + 1.days)
+        # 14 hours of sleep ensure to be always on top of the feed
+
+        # Wait for Elasticsearch to process
+        sleep(2)
+
+        # Check feed - should contain the new entry
+        feed = get_feed(@current_user_id)
+        expect(feed["data"].size).to be > 0
+
+        # Verify the new entry is from the followed user
+        new_entry_in_feed = feed["data"].find { |e| e["sleep_entry_id"] == new_entry[:body]["sleep_entry"]["id"] }
+        expect(new_entry_in_feed).not_to be_nil
+
+        # Clean up - unfollow the user
+        delete_sleep_entry(@regular_user_id, new_entry[:body]["sleep_entry"]["id"])
+      end
+    end
+
+    context "when celebrity user posts a new sleep entry" do
+      it "should appear in the current user's feed" do
+        # Follow the celebrity user
+        follow_user(@current_user_id, @celebrity_user_id)
+
+        # Wait for Elasticsearch to process
+        sleep(2)
+
+        # Create a new sleep entry for the followed user
+        new_entry = create_sleep_entry(@celebrity_user_id, 14.hours, @beginning_of_last_week + 1.days)
+
+        # Wait for Elasticsearch to process
+        sleep(2)
+
+        # Check feed - should contain the new entry
+        feed = get_feed(@current_user_id)
+        expect(feed["data"].size).to be > 0
+
+        # Verify the new entry is from the followed user
+        new_entry_in_feed = feed["data"].find { |e| e["id"] == new_entry[:body]["sleep_entry"]["id"] }
+        expect(new_entry_in_feed).not_to be_nil
+
+        # Clean up - unfollow the user
+        delete_sleep_entry(@celebrity_user_id, new_entry[:body]["sleep_entry"]["id"])
+      end
+    end
+
+    context "when regular user deletes a sleep entry" do
+      it "should be removed from the current user's feed" do
+        # Follow the regular user
+        follow_user(@current_user_id, @regular_user_id)
+
+        # Wait for Elasticsearch to process
+        sleep(2)
+
+        # Create a new sleep entry for the followed user
+        new_entry = create_sleep_entry(@regular_user_id, 14.hours, @beginning_of_last_week + 1.days)
+
+        # Wait for Elasticsearch to process
+        sleep(2)
+
+        # Check feed - should contain the new entry
+        feed = get_feed(@current_user_id)
+        expect(feed["data"].size).to be > 0
+
+        # Verify the new entry is from the followed user
+        new_entry_in_feed = feed["data"].find { |e| e["sleep_entry_id"] == new_entry[:body]["sleep_entry"]["id"] }
+        expect(new_entry_in_feed).not_to be_nil
+
+        # Delete the sleep entry
+        delete_result = delete_sleep_entry(@regular_user_id, new_entry[:body]["sleep_entry"]["id"])
+        expect(delete_result[:status]).to eq(200)
+
+        # Wait for Elasticsearch to process
+        sleep(2)
+
+        # Check feed - should not contain the deleted entry
+        feed_after_delete = get_feed(@current_user_id)
+        expect(feed_after_delete["data"].select { |e| e["sleep_entry_id"] == new_entry[:body]["sleep_entry"]["id"] }).to be_empty
       end
     end
   end
