@@ -49,6 +49,7 @@ The system uses a hybrid approach for social feeds:
 - Elasticsearch 7.x
 - Kafka & Zookeeper
 - Docker (optional for containerized setup)
+- Bundler
 
 ### Installation
 
